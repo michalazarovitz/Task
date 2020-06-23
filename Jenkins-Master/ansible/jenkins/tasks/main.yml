@@ -1,0 +1,7 @@
+---
+# tasks file for docker
+- name:  install docker on redhat
+  import_tasks: install-docker.yaml  
+- name:  configure jenkins
+  import_tasks: jenkins-setup.yaml
+  

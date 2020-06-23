@@ -1,0 +1,16 @@
+52.50.32.16
+34.248.178.230
+
+
+def scriptApproval = org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval.get()
+
+String[] signs = [
+    "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.Object java.lang.String",
+    "staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods putAt java.lang.Object java.lang.String java.lang.Object"
+    ]
+
+for( String sign : signs ) {
+    scriptApproval.approveSignature(sign)
+}
+
+scriptApproval.save()

@@ -1,0 +1,79 @@
+---
+
+- name: Ensure old versions of Docker are not installed.
+  package:
+    name:
+      - docker
+      - docker-common
+      - docker-engine
+    state: absent
+  become: true  
+
+
+- name: Add Docker GPG key.
+  rpm_key:
+    key: "{{ docker_yum_gpg_key }}"
+    state: present
+  become: true  
+
+- name: Add Docker repository.
+  get_url:
+    url: "{{ docker_yum_repo_url }}"
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    owner: root
+    group: root
+    mode: 0644
+  become: true  
+
+- name: Configure Docker Edge repo.
+  ini_file:
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    section: 'docker-{{ docker_edition }}-edge'
+    option: enabled
+    value: '{{ docker_yum_repo_enable_edge }}'
+  become: true  
+
+- name: Configure Docker Test repo.
+  ini_file:
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    section: 'docker-{{ docker_edition }}-test'
+    option: enabled
+    value: '{{ docker_yum_repo_enable_test }}'
+  become: true
+
+- name: Install containerd separately (CentOS 8).
+  package:
+    name: https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.13-3.2.el7.x86_64.rpm
+    state: present
+  become: true
+
+- name: Install Docker.
+  package:
+    name: "{{ docker_package }}"
+    state: "{{ docker_package_state }}"
+  notify: restart docker 
+  become: true   
+
+- name: Ensure Docker is started and enabled at boot.
+  service:
+    name: docker
+    state: "{{ docker_service_state }}"
+    enabled: "{{ docker_service_enabled }}"
+  become: true
+
+- name: Ensure handlers are notified now to avoid firewall conflicts.
+  meta: flush_handlers 
+  become: true 
+
+- name: Change file permissions
+  file:
+    path: /var/run/docker.sock
+    mode: '0666'
+  become: true
+  
+- name: Ensure docker users are added to the docker group.
+  user:
+    name: ec2-user
+    groups: docker
+    append: true
+  become: true  

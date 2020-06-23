@@ -1,0 +1,105 @@
+---
+
+- name: Install Java 8 using YUM.
+  yum:
+    name: "{{java.VERSION}}"
+    state: present
+  become: true
+
+- name: Download Jenkins repo yum URL for  
+  get_url:
+    url: "{{jenkins.repo_URL}}"
+    dest: /etc/yum.repos.d/jenkins.repo
+  become: true
+
+- name: Import GPG Key
+  rpm_key:
+    state: present
+    key: "{{jenkins.gpg_key}}"
+  become: true  
+
+- name: Install Jenkins
+  yum:
+    name: jenkins
+    state: present
+  become: true  
+
+- name: Start Jenkins service and enable on boot
+  service:
+    name: jenkins
+    state: started
+    enabled: yes
+  become: true  
+    
+- name: Wait for Jenkins to restart
+  wait_for:
+    host: localhost
+    port: 8080
+    delay: 30
+    timeout: 300
+
+- name: Change Jenkins JAVA options
+  lineinfile: 
+    dest: /var/lib/jenkins/config.xml
+    regexp: <useSecurity>true</useSecurity>
+    line: <useSecurity>false</useSecurity>
+    state: present
+  become: true
+
+- name: Start Jenkins service and enable on boot
+  service:
+    name: jenkins
+    state: restarted
+    enabled: yes
+  become: true
+  
+- name: Wait for Jenkins to restart
+  wait_for:
+     host: localhost
+     port: 8080
+     delay: 30
+     timeout: 300  
+
+- name: install recommanede plugins
+  jenkins_plugin:
+    name: "{{ item }}" 
+  with_items:
+       - git
+       - template-project
+       - pipeline
+       - docker-plugin
+       - docker-workflow
+       - template-project
+       - config-file-provider
+       - github-pullrequest
+       - git
+       - pipeline-stage-view
+       - pipeline-utility-steps
+       - workflow-aggregator
+       - pipeline-github
+       - ssh-agent
+       - ssh-slaves
+       - ansiColor
+       - ansible
+       - permissive-script-security
+  become: true      
+
+- name: Start Jenkins service and enable on boot
+  service:
+    name: jenkins
+    state: restarted
+    enabled: yes 
+  become: true    
+
+- name: Wait for Jenkins to restart
+  wait_for:
+    host: localhost
+    port: 8080
+    delay: 60
+    timeout: 300
+
+- name: allow ssh without host key checking
+  replace:
+    path: /etc/ansible/ansible.cfg
+    regexp: '#host_key_checking = True'
+    replace: 'host_key_checking = False'     
