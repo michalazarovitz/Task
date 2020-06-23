@@ -1,5 +1,5 @@
 ##groovy scripts with credentials
-Jenkins-Master/ansible/jenkins/files/add_git_cred
+/Jenkins-Master/ansible/jenkins/files/add_git_cred
 
 
 # Local .terraform directories
